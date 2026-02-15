@@ -7,18 +7,23 @@
 #include <WebServer.h>
 #include <HTTPClient.h>
 
-#include "captive-portal.h"
+//#include "captive-portal.h"
 
-//#include "page.html.h"
-//#include "page.css.h"
-//#include "page.js.h"
+#include "page.html.h"
+#include "page.css.h"
+#include "page.js.h"
 
 //
 // Wifi Pre-Setup
 //
 
-const char* ssid = "";
-const char* password = "";
+// define wifi login ssid and password
+// - kept in a separate file to avoid being uploaded to github
+
+#include "wifi.creds.h"
+
+//const char* ssid = "";
+//const char* password = "";
 
 // DNS Server for Captive Portal
 //DNSServer dnsServer;
@@ -187,19 +192,23 @@ void wifiSetup() {
   // This redirects ALL domain requests to the ESP32's IP
   //dnsServer.start(DNS_PORT, "*", myIP);
   
+  // moved to function to be reusable for uri that is not /
   //server.on( "/", []() {
     //Serial.println( "HTTP request uri: /" );
     //server.send( 200, "text/html", pageHtml );
   //});
   server.on( "/page.css", []() {
     Serial.println( "HTTP request uri: /page.css" );
-    //server.send( 200, "text/css", pageCss );
+    server.send( 200, "text/css", pageCss );
   });
   server.on( "/page.js", []() {
     Serial.println( "HTTP request uri: /page.js" );
-    //server.send( 200, "text/javascript", pageJs );
+    server.send( 200, "text/javascript", pageJs );
   });
-  
+  server.on( "/favicon.ico", []() {
+    Serial.println( "HTTP request uri: /favicon.ico" );
+    server.send( 400, "text/plain", "" );
+  });
   
   // Web Server Routes
   server.on("/", handleRoot);
