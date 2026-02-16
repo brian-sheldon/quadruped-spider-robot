@@ -51,18 +51,25 @@ const char pageHtml[] PROGMEM = R"=====(
       <button class="btn-pose" onclick="pose('shrug')">Shrug</button>
       <button class="btn-pose" onclick="pose('dead')">Dead</button>
       <button class="btn-pose" onclick="pose('crab')">Crab</button>
-      <button class="btn-pose" onclick="pose('test')">test</button>
-      <button class="btn-pose" onclick="pose('R1')">R1</button>
-      <button class="btn-pose" onclick="pose('R2')">R2</button>
-      <button class="btn-pose" onclick="pose('R3')">R3</button>
-      <button class="btn-pose" onclick="pose('R4')">R4</button>
-      <button class="btn-pose" onclick="pose('L1')">L1</button>
-      <button class="btn-pose" onclick="pose('L2')">L2</button>
-      <button class="btn-pose" onclick="pose('L3')">L3</button>
-      <button class="btn-pose" onclick="pose('L4')">L4</button>
+      <button class="btn-pose tool" onclick="pose('test')">test</button>
+    </div>
+    <h3 class="tool">The Femurs</h3>
+    <div class="grid">
+      <button id="L1" class="btn-pose tool">L1</button>
+      <button id="R1" class="btn-pose tool">R1</button>
+      <button id="L2" class="btn-pose tool">L2</button>
+      <button id="R2" class="btn-pose tool">R2</button>
+    </div>
+    <h3 class="tool">The Feet</h3>
+    <div class="grid">
+      <button id="L3" class="btn-pose tool">L3</button>
+      <button id="R3" class="btn-pose tool">R3</button>
+      <button id="L4" class="btn-pose tool">L4</button>
+      <button id="R4" class="btn-pose tool">R4</button>
     </div>
     
     <button class="btn-settings" onclick="openSettings()">Settings</button>
+    <button class="btn-loghideshow" onclick="toolhideshow()">Tools (show/hide)</button>
 
     <div id="settingsPanel" class="settings-panel">
       <div class="settings-content">
@@ -79,6 +86,8 @@ const char pageHtml[] PROGMEM = R"=====(
         <button class="btn-close" onclick="closeSettings()">Close</button>
       </div>
     </div>
+    
+    <div id="log" class="tool"></div>
     
   </body>
 </html>

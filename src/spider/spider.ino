@@ -1,8 +1,39 @@
 
 
+//#include "pico.wifi.h"
+
+#include <WiFi.h>
+#include <WebServer.h>
+#include <HTTPClient.h>
+
+WebServer server(80);
+
+int loops = 0;
+void handleWebServer( String src ) {
+  loops++;
+  unsigned long ms = millis();
+  /*
+  Serial.print( "handleWebServer loops: " );
+  Serial.print( loops );
+  Serial.print( " millis: " );
+  Serial.print( ms );
+  Serial.print( " src: " );
+  Serial.println( src );
+  */
+  /*
+  if ( ( loops % 10 ) == 0 ) {
+    Serial.print( "handleWebServer loops: " );
+    Serial.print( loops );
+    Serial.print( " millis: " );
+    Serial.println( ms );
+  }
+  */
+  server.handleClient();
+}
 
 #include "spider.servo.h"
 #include "spider.face.h"
+#include "animate.h"
 
 #include "pico.wifi.h"
 
@@ -49,14 +80,4 @@ void loop() {
   faceLoop();
   wifiLoop();
 
-  // Sweep from 0 to 180 degrees
-  for (pos = 0; pos <= 180; pos += 1) { 
-    //myservo.write(pos);    // Tell the servo to go to a particular angle
-    delay(15);             // Wait 15 milliseconds for the servo to reach the position 
-  }
-  // Sweep from 180 to 0 degrees
-  for (pos = 180; pos >= 0; pos -= 1) { 
-    //myservo.write(pos);    // Tell the servo to go to a particular angle
-    delay(15);             // Wait 15 milliseconds for the servo to reach the position 
-  }
 }

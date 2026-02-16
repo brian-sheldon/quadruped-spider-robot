@@ -15,6 +15,7 @@
 //#define I2C_SCL 22
 
 // I2C Pins for S2 Mini Board
+// I2C Pins for the Pi Pico
 #define I2C_SDA 4
 #define I2C_SCL 5
 
@@ -248,7 +249,7 @@ void delayWithFace(unsigned long ms) {
   unsigned long start = millis();
   while (millis() - start < ms) {
     updateAnimatedFace();
-    //server.handleClient();
+    handleWebServer( "delayWithFace" );
     //dnsServer.processNextRequest();
     delay(5);
   }

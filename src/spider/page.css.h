@@ -88,6 +88,12 @@ button:active {
   margin-top: 10px;
   padding: 10px 25px;
 }
+.btn-loghideshow { 
+  background-color: #444444; 
+  box-shadow: 0 4px #222222; 
+  margin-top: 10px;
+  padding: 10px 25px;
+}
 .spacer { visibility: hidden; }
 .settings-panel { 
   display: none; 
@@ -124,4 +130,10 @@ button:active {
 }
 .btn-save { background-color: #27ae60; box-shadow: 0 4px #1e8449; width: 100%; margin-top: 25px; color: white; }
 .btn-close { background-color: #c0392b; box-shadow: 0 4px #922b21; width: 100%; margin-top: 12px; color: white; }
+#log {
+
+}
+.hidden {
+  display: none;
+}
 )=====";

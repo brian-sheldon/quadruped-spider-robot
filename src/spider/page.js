@@ -28,29 +28,6 @@ class Servo {
     this.buttonInit();
     log( this.state );
   }
-  get fetchServoStateComplete() {
-    return _fetchServoStateComplete;
-  }
-  fetchServoStateJson() {
-    let self = this;
-    self._fetchServoStateComplete = false;
-    fetch( '/getServoStateJson?servo=' + this.index )
-      .then( res => res.json() )
-      .then( data => {
-        self._fetchServoStateComplete = true;
-        log( JSON.stringify( data ) );
-        let failed = false;
-        if ( data.index != this.index ) failed = true;
-        if ( data.label != this.label ) failed = true;
-        if ( data.angleMin != this.angleMin ) failed = true;
-        if ( data.angleMax != this.angleMax ) failed = true;
-        if ( data.angle != this.angle ) failed = true;
-        log( "server data matches web app data: " + ( ! failed ) );
-      })
-      .catch( error => {
-        log( 'fetch error servo: ' + self.index + ' error: ' + error );
-      });
-  }
   get angle() {
     return this._angle;
   }
@@ -87,14 +64,7 @@ class Servo {
   }
   servoAngle() {
     fetch( '/servoAngle?servo=' + this.index + '&angle=' + this.angle )
-      .then( res => res.json() )
-      .then( data => {
-        log( JSON.stringify( data ) );
-        
-      })
-      .catch( error => {
-        log( 'fetch error: ' + error );
-      });
+      .catch(log);
   }
   get state() {
     let s = '';
@@ -118,21 +88,13 @@ class Servo {
       log( self.state );
     });
   }
-  utf8Bytes( ch ) {
-    let byteArr = Array.from( new TextEncoder().encode( data.anglesLabel[0] ) );
-    let s = '';
-    for ( let i = 0; i < byteArr.length; i++ ) {
-      s += byteArr[i].toString(16);
-    }
-    return s;
-  }
+  
 }
 
 function start() {
   log( 'starting ...' );
   initServoButtons();
 }
-
 function initServoButtons() {
   let w = '\u2190';
   let up = '\u2191';
@@ -156,19 +118,37 @@ function initServoButtons() {
   servos[i] = new Servo( i++, 'R3', [ 180, 135, 90, 45, 0 ], [ down, se, e, ne, up ] );
   servos[i] = new Servo( i++, 'L3', [ 0, 45, 90, 135, 180 ], [ down, sw, w, nw, up ] );
   servos[i] = new Servo( i++, 'L4', [ 180, 135, 90, 45, 0 ], [ down, sw, w, nw, up ] );
-
-  // compare with server
-  i = 0;
-  let id = setInterval( function() {
-    log( 'send fetchServoStateJson request servo: ' + i );
-    servos[i].fetchServoStateJson();
-    i++;
-    if ( i > 7 ) {
-      clearInterval( id );
-    }
-  }, 2000 );
 }
-
+function initServoButtonsOld() {
+  let servoAngles = [];
+  let servo      = [ 'r1', 'r2', 'l1', 'l2', 'r4', 'r3', 'l3', 'l4' ];
+  //      angle0 = [   sd,   sd,   sd,   sd,   dn,   dn,   dn,   dn ]
+  servoAngles[0] = [   90,   90,   90,   90,    0,  180,    0,  180 ];
+  servoAngles[1] = [  180,    0,    0,  180,  180,    0,  180,    0 ];
+  //      angle1 = [   fw,   bw,   fw,   bk,   up,   up,   up,   up ]
+  let servoAngle = [];
+  for ( let i = 0; i < servo.length; i++ ) {
+    let angle0 = servoAngles[0][i];
+    let angle1 = servoAngles[1][i];
+    let name = servo[i].toUpperCase();
+    let id = '#' + name;
+    let label = angle0 + ' -> ' + angle1;
+    servoAngle[i] = 0;
+    $(id).text( name + ' ( ' + label + ' )' );
+    $(id).on( 'click', function() {
+      let name = this.id;
+      let lname = name.toLowerCase();
+      let i = servo.indexOf( lname );
+      let angle = servoAngle[i];
+      let angle1 = servoAngles[angle][i];
+      angle = ( angle + 1 ) % 2;
+      servoAngle[i] = angle;
+      let angle0 = servoAngles[angle][i];
+      let label = name + ' ( ' + angle0 + ' -> ' + angle1 + ' )';
+      $(this).text( label );
+    });
+  }
+}
 function move(dir) {
   fetch( '/cmd?go=' + dir )
     .catch(log);

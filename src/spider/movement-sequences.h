@@ -56,8 +56,8 @@ inline void runStandPose(int face) {
   setServoAngle(1, 45); // r2 14
   setServoAngle(2, 45); // l1 19
   setServoAngle(3, 135); // l2 17
-  setServoAngle(4, 0); // r3 13
-  setServoAngle(5, 180); // r4 15
+  setServoAngle(4, 0); // r4 13
+  setServoAngle(5, 180); // r3 15
   setServoAngle(6, 0); // l3 18
   setServoAngle(7, 180); // l4 16
   if (face == 1) enterIdle();

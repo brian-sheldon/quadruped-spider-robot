@@ -29,7 +29,7 @@
 //DNSServer dnsServer;
 //const byte DNS_PORT = 53;
 
-WebServer server(80);
+//WebServer server(80);
 
 // Prototypes
 void handleGetSettings();
@@ -57,6 +57,10 @@ void handleCommandWeb() {
     Serial.print( " pose: " );
     Serial.println( poseStr );
     if ( poseStr == "test" ) {
+      // Note: should not be used when femor is attached to frame
+      // as the frame limits servo movement, which could damage
+      // servo.
+      /*
       servosAngle( 90 );
       delay( 2000 );
       servosAngle( 0 );
@@ -64,40 +68,7 @@ void handleCommandWeb() {
       servosAngle( 90 );
       delay( 2000 );
       servosAngle( 180 );
-      // R1   R2    L1    L2      R4    R3    L3    L4
-      //  0,   1,    2,    3,      4,    5,    6,    7
-    } else if ( poseStr == "R1" ) {
-      setServoAngle(0, 90);
-      delay( 1000 );
-      setServoAngle(0, 180);
-    } else if ( poseStr == "R2" ) {
-      setServoAngle(1, 90);
-      delay( 1000 );
-      setServoAngle(1, 0);
-    } else if ( poseStr == "R3" ) {
-      setServoAngle(5, 90);
-      delay( 1000 );
-      setServoAngle(5, 0);
-    } else if ( poseStr == "R4" ) {
-      setServoAngle(4, 90);
-      delay( 1000 );
-      setServoAngle(4, 180);
-    } else if ( poseStr == "L1" ) {
-      setServoAngle(2, 90);
-      delay( 1000 );
-      setServoAngle(2, 0);
-    } else if ( poseStr == "L2" ) {
-      setServoAngle(3, 90);
-      delay( 1000 );
-      setServoAngle(3, 0);
-    } else if ( poseStr == "L3" ) {
-      setServoAngle(6, 90);
-      delay( 1000 );
-      setServoAngle(6, 0);
-    } else if ( poseStr == "L4" ) {
-      setServoAngle(7, 90);
-      delay( 1000 );
-      setServoAngle(7, 0);
+      */
     } else {
       currentCommand = poseStr;
     }
@@ -148,6 +119,40 @@ void handleSetSettings() {
   server.send(200, "text/plain", "OK");
 }
 
+void handleGetServoStateJson() {
+  int servo = -1;
+  if ( server.hasArg( "servo" ) ) {
+    servo = server.arg( "servo" ).toInt();
+  }
+  Serial.print( "getServoStateJson servo: " );
+  Serial.print( servo );
+  if ( servo >= 0 && servo <= 7 ) {
+    String json = servoCmd[servo].stateJson();
+    server.send( 200, "application/json", json );
+    Serial.println( " response sent ..." );
+  } else {
+    server.send( 200, "text/plain", "invalid request ..." );
+    Serial.println( " invalid request ..." );
+  }
+}
+void handleServoAngle() {
+  int servo = -1;
+  int angle = -1;
+  if ( server.hasArg( "servo" ) ) {
+    servo = server.arg( "servo" ).toInt();
+  }
+  if ( server.hasArg( "angle" ) ) {
+    angle = server.arg( "angle" ).toInt();
+  }
+  if ( servo >= 0 && servo <= 7 ) {
+    if ( angle >= 0 && angle <= 180 ) {
+      servoCmd[servo].setAngle( angle );
+      setServoAngle( servo, angle );
+    }
+  }
+  String json = servoCmd[servo].stateJson();
+  server.send( 200, "application/json", json );
+}
 
 //
 // Wifi Setup
@@ -206,8 +211,8 @@ void wifiSetup() {
     server.send( 200, "text/javascript", pageJs );
   });
   server.on( "/favicon.ico", []() {
-    Serial.println( "HTTP request uri: /favicon.ico" );
-    server.send( 400, "text/plain", "" );
+    //Serial.println( "HTTP request uri: /favicon.ico" );
+    //server.send( 400, "text/plain", "" );
   });
   
   // Web Server Routes
@@ -215,7 +220,10 @@ void wifiSetup() {
   server.on("/cmd", handleCommandWeb);
   server.on("/getSettings", handleGetSettings);
   server.on("/setSettings", handleSetSettings);
-  
+
+  server.on( "/servoAngle", handleServoAngle );
+  server.on( "/getServoStateJson", handleGetServoStateJson );
+
   // Catch-all route for captive portal
   // This ensures any URL redirects to the controller page
   server.onNotFound(handleRoot);
@@ -233,7 +241,7 @@ void wifiLoop() {
 
   // Process DNS requests for captive portal
   //dnsServer.processNextRequest();
+  handleWebServer( "wifiLoop" );
   
-  server.handleClient();
 
 }
