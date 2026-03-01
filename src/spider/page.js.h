@@ -25,11 +25,12 @@ class Servo {
     this.angleMax = Math.max( ...angles );
     this.hzMin = 550;
     this.hzMax = 2250;
+    this._fetchServoStateComplete = false;
     this.buttonInit();
     log( this.state );
   }
   get fetchServoStateComplete() {
-    return _fetchServoStateComplete;
+    return this._fetchServoStateComplete;
   }
   fetchServoStateJson() {
     let self = this;
@@ -158,15 +159,30 @@ function initServoButtons() {
   servos[i] = new Servo( i++, 'L4', [ 180, 135, 90, 45, 0 ], [ down, sw, w, nw, up ] );
 
   // compare with server
-  i = 0;
-  let id = setInterval( function() {
-    log( 'send fetchServoStateJson request servo: ' + i );
-    servos[i].fetchServoStateJson();
-    i++;
-    if ( i > 7 ) {
-      clearInterval( id );
-    }
-  }, 2000 );
+  // just using to check a few things for now
+  // turning off
+  if ( false ) {
+    i = 0;
+    let doNext = true;
+    let id = setInterval( function() {
+      if ( doNext ) {
+        doNext = false;
+        log( 'send fetchServoStateJson request servo: ' + i );
+        servos[i].fetchServoStateJson();
+        //log( servos[i].fetchServoStateComplete );
+      } else {
+        if ( servos[i].fetchServoStateComplete ) {
+          log( 'doing next ...' );
+          i++;
+          if ( i > 7 ) {
+            clearInterval( id );
+          } else {
+            doNext = true;
+          }
+        }
+      }
+    }, 10 );
+  }
 }
 
 function move(dir) {
@@ -179,6 +195,10 @@ function stop() {
 }
 function pose(name) {
   fetch( '/cmd?pose=' + name )
+    .then( r => r.text() )
+    .then( data => {
+      log( data );
+    })
     .catch(log);
 }
 function openSettings() {

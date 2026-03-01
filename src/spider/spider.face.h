@@ -23,7 +23,7 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 // Global state for animations
 String currentCommand = "";
-String currentFaceName = "defualt";
+String currentFaceName = "default";
 const unsigned char* const* currentFaceFrames = nullptr;
 uint8_t currentFaceFrameCount = 0;
 uint8_t currentFaceFrameIndex = 0;
@@ -38,7 +38,30 @@ bool idleBlinkActive = false;
 unsigned long nextIdleBlinkMs = 0;
 uint8_t idleBlinkRepeatsLeft = 0;
 
+// ********************
+// I was here - move to network???
+// ********************
 
+// WiFi Info Scrolling
+unsigned long lastInputTime = 0;
+bool firstInputReceived = false;
+bool showingWifiInfo = false;
+int wifiScrollPos = 0;
+unsigned long lastWifiScrollMs = 0;
+String wifiInfoText = "";
+
+// ********************
+// I was here - move to network
+// ********************
+
+// Network Mode
+bool networkConnected = false;
+IPAddress networkIP;
+String deviceHostname = "sesame-robot";
+
+// ********************
+// I was here
+// ********************
 
 struct FaceEntry {
   const char* name;
@@ -90,8 +113,36 @@ const FaceFpsEntry faceFpsEntries[] = {
   { "crab", 1 },
   { "idle", 1 },
   { "idle_blink", 7 },
-  { "defualt", 1 },
+  { "default", 1 },
+
+// ********************
+// I was here
+// ********************
+
+// Conversational faces (manually controlled by Python - no auto-animation)
+  { "happy", 1 },
+  { "talk_happy", 1 },
+  { "sad", 1 },
+  { "talk_sad", 1 },
+  { "angry", 1 },
+  { "talk_angry", 1 },
+  { "surprised", 1 },
+  { "talk_surprised", 1 },
+  { "sleepy", 1 },
+  { "talk_sleepy", 1 },
+  { "love", 1 },
+  { "talk_love", 1 },
+  { "excited", 1 },
+  { "talk_excited", 1 },
+  { "confused", 1 },
+  { "talk_confused", 1 },
+  { "thinking", 1 },
+  { "talk_thinking", 1 }
 };
+
+// ********************
+// I was here
+// ********************
 
 // Prototypes
 void setServoAngle(uint8_t channel, int angle);
@@ -106,23 +157,41 @@ void exitIdle();
 void updateIdleBlink();
 int getFaceFpsForName(const String& faceName);
 bool pressingCheck(String cmd, int ms);
+void handleGetSettings();
+void handleSetSettings();
+void handleGetStatus();
+void handleApiCommand();
+void updateWifiInfoScroll();
+void recordInput();
 
-void faceSetup() {
-  // OLED Init
+
+void oledInit() {
   if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDR)) {
     Serial.println(F("SSD1306 allocation failed."));
     while (1);
   }
-  
+
   display.clearDisplay();
   display.setTextColor(SSD1306_WHITE);
   display.setTextSize(1);
   display.setCursor(0,0);
-  display.println(F("Creating WiFi..."));
-  display.display();
   
+}
+
+void faceSetup() {
+  // OLED Init
+
+  oledInit();
+
+  display.println(F("Setting up WiFi ..."));
+  display.display();
+
+// ********************
+// I was here - note face change and this doesn't happen until after wifi connected
+// ********************
+
   // Set default face
-  setFace("defualt");
+  //setFace("stand");
   
   Serial.println(F("HTTP server & Captive Portal started."));
   
@@ -130,8 +199,15 @@ void faceSetup() {
 
 void faceLoop() {
   
+  // ********************
+  // I was here - note added updateWifiInfoScroll
+  // ********************
+  
+  
+
   updateAnimatedFace();
   updateIdleBlink();
+  updateWifiInfoScroll();
 
 }
 
@@ -300,8 +376,70 @@ void updateIdleBlink() {
   }
 }
 
+void recordInput() {
+  lastInputTime = millis();
+  if (!firstInputReceived) {
+    firstInputReceived = true;
+    showingWifiInfo = false;
+  }
+}
 
-
+void updateWifiInfoScroll() {
+  // Don't show WiFi info if first input has been received
+  if (firstInputReceived) {
+    if (showingWifiInfo) {
+      showingWifiInfo = false;
+      // Restore the current face
+      if (currentFaceFrames != nullptr && currentFaceFrameCount > 0) {
+        updateFaceBitmap(currentFaceFrames[currentFaceFrameIndex]);
+      }
+    }
+    return;
+  }
+  
+  unsigned long now = millis();
+  
+  // Check if 30 seconds have passed without input
+  if (!showingWifiInfo && (now - lastInputTime >= 30000)) {
+    showingWifiInfo = true;
+    wifiScrollPos = 0;
+    lastWifiScrollMs = now;
+  }
+  
+  if (!showingWifiInfo) return;
+  
+  // Update scroll every 150ms
+  if (now - lastWifiScrollMs >= 150) {
+    lastWifiScrollMs = now;
+    
+    // Clear and redraw with current face in background
+    display.clearDisplay();
+    
+    // Draw the face bitmap in the background
+    if (currentFaceFrames != nullptr && currentFaceFrameCount > 0) {
+      display.drawBitmap(0, 0, currentFaceFrames[currentFaceFrameIndex], 128, 64, SSD1306_WHITE);
+    }
+    
+    // Draw black bar for text background on top row
+    display.fillRect(0, 0, 128, 10, SSD1306_BLACK);
+    
+    // Draw scrolling text
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setTextWrap(false);
+    display.setCursor(-wifiScrollPos, 1);
+    display.print(wifiInfoText);
+    display.setTextWrap(true);
+    
+    display.display();
+    
+    // Advance scroll position
+    wifiScrollPos += 2;
+    if (wifiScrollPos >= (int)(wifiInfoText.length() * 6)) {
+      wifiScrollPos = 0;
+    }
+  }
+}
 
 
 

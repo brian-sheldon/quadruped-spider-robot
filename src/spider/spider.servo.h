@@ -17,10 +17,11 @@
 // ======================================================================
 Servo servos[8];
 
-class ServoCmd {
+class ServoConfig {
 private:
   int _index;
   String _label;
+  int _pin;
   int _dutyMin;
   int _dutyMax;
   std::vector<int> _angles;
@@ -30,13 +31,15 @@ private:
   int _angleMax;
 public:
   //ServoCmd();
-  ServoCmd() {
+  ServoConfig() {
   }
   //void config( int index, String label, const std::vector<int>& angles, const std::vector<char16_t>& anglesLabel );
-  void config(int index, String label, int dutyMin, int dutyMax, const std::vector<int>& angles, const std::vector<String>& anglesLabel) {
+  void config(int index, String label, int pin, int dutyMin, int dutyMax, const std::vector<int>& angles, const std::vector<String>& anglesLabel) {
     // basic info
     _index = index;
     _label = label;
+    // pin
+    _pin = pin;
     // duty cycle min and max
     _dutyMin = dutyMin;
     _dutyMax = dutyMax;
@@ -50,9 +53,20 @@ public:
     std::vector<int>::iterator max_it = std::max_element(_angles.begin(), _angles.end());
     _angleMin = *min_it;
     _angleMax = *max_it;
+    attach();
     // lets print the config to serial
     serialPrintState();
-    Serial.println(stateJson());
+    //Serial.println(stateJson());
+  }
+  void attach() {
+    Serial.print( "servo.attach servo: " );
+    Serial.print( _index );
+    Serial.print( " pin: " );
+    Serial.print( _pin );
+    int res = servos[ _index ].attach( _pin, _dutyMin, _dutyMax );
+    setAngle( _angles[0] );
+    Serial.print( " res: " );
+    Serial.println( res );
   }
   int getAngle() {
     return _angle;
@@ -60,7 +74,8 @@ public:
   void setAngle(int angle) {
     if (angle >= _angleMin && angle <= _angleMax) {
       _angle = angle;
-      // set servo to angle
+      setServoAngle( _index, angle );
+      Serial.println( "" );
       Serial.print("setAngle servo: ");
       Serial.print(_label);
       Serial.print(" angle: ");
@@ -74,6 +89,7 @@ public:
     String json = "{" + lf;
     json += tab + "\"index\":" + _index + "," + lf;
     json += tab + "\"label\":\"" + _label + "\"," + lf;
+    json += tab + "\"pin\":" + _pin + "," + lf;
     json += tab + "\"dutyMin\":" + _dutyMin + "," + lf;
     json += tab + "\"dutyMax\":" + _dutyMax + "," + lf;
     json += tab + "\"angleMin\":" + _angleMin + "," + lf;
@@ -101,10 +117,12 @@ public:
     return json;
   }
   void serialPrintState() {
-    Serial.print("initServo index: ");
-    Serial.print(_index);
-    Serial.print(" label: ");
-    Serial.print(_label);
+    Serial.print( "initServo index: ");
+    Serial.print( _index);
+    Serial.print( " label: ");
+    Serial.print( _label);
+    Serial.print( " pin: " );
+    Serial.print( _pin );
     Serial.print(" minDuty: ");
     Serial.print(_dutyMin);
     Serial.print(" maxDuty: ");
@@ -119,19 +137,9 @@ public:
   }
 };
 
-ServoCmd servoCmd[8];
+ServoConfig servoConfig[8];
 
-void initServos() {
-  /*
-  std::string n = u8"\u2191";
-  std::string ne = u8"\u2197";
-  std::string e = u8"\u2192";
-  std::string se = u8"\u2198";
-  std::string s = u8"\u2193";
-  std::string sw = u8"\u2199";
-  std::string w = u8"\u2190";
-  std::string nw = u8"\u2196";
-  */
+void servoConfigInit() {
   String n = u8"\u2191";
   String ne = u8"\u2197";
   String e = u8"\u2192";
@@ -144,14 +152,17 @@ void initServos() {
   int i = 0;
 
   // yes, R4 and R3 don't follow the order pattern, but that is the order in the original code
-  servoCmd[i].config(i++, "R1", 530, 2600, { 135, 90, 180 }, { ne, e, n });
-  servoCmd[i].config(i++, "R2", 430, 2440, { 45, 90, 0 }, { se, e, s });
-  servoCmd[i].config(i++, "L1", 550, 2510, { 45, 90, 0 }, { nw, w, n });
-  servoCmd[i].config(i++, "L2", 640, 2550, { 135, 90, 180 }, { sw, w, s });
-  servoCmd[i].config(i++, "R4", 690, 2600, { 0, 45, 90, 135, 180 }, { s, se, e, ne, n });
-  servoCmd[i].config(i++, "R3", 500, 2520, { 180, 135, 90, 45, 0 }, { s, se, e, ne, n });
-  servoCmd[i].config(i++, "L3", 400, 2450, { 0, 45, 90, 135, 180 }, { s, se, e, ne, n });
-  servoCmd[i].config(i++, "L4", 380, 2370, { 180, 135, 90, 45, 0 }, { s, se, e, ne, n });
+  //
+  //                    index label pin   min   max    angles                   angle labels
+  //
+  servoConfig[i].config( i++, "R1",  12,  530, 2600, { 135, 90, 180        }, { ne, e, n        } );
+  servoConfig[i].config( i++, "R2",  14,  430, 2440, { 45, 90, 0           }, { se, e, s        } );
+  servoConfig[i].config( i++, "L1",  19,  550, 2510, { 45, 90, 0           }, { nw, w, n        } );
+  servoConfig[i].config( i++, "L2",  17,  640, 2550, { 135, 90, 180        }, { sw, w, s        } );
+  servoConfig[i].config( i++, "R4",  15,  690, 2600, { 0, 45, 90, 135, 180 }, { s, se, e, ne, n } );
+  servoConfig[i].config( i++, "R3",  13,  500, 2520, { 180, 135, 90, 45, 0 }, { s, se, e, ne, n } );
+  servoConfig[i].config( i++, "L3",  18,  400, 2450, { 0, 45, 90, 135, 180 }, { s, se, e, ne, n } );
+  servoConfig[i].config( i++, "L4",  16,  380, 2370, { 180, 135, 90, 45, 0 }, { s, se, e, ne, n } );
 }
 
 // Sesame Distro Board Pinout
@@ -168,26 +179,17 @@ void initServos() {
 //const int servoMaxs[8] =     { 2600, 2440, 2510, 2550,   2520, 2600, 2450, 2370 };
 //const int servoAngleMin[8] = {   90,    0,    0,   90,      0,    0,    0,    0 };
 //const int servoAngleMax[8] = {  180,   90,   90,  180,    180,  180,  180,  180 };
-const int servoPins[8] = { 12, 14, 19, 17, 15, 13, 18, 16 };
-const int servoMins[8] = { 530, 430, 550, 640, 690, 500, 400, 380 };
-const int servoMaxs[8] = { 2600, 2440, 2510, 2550, 2600, 2520, 2450, 2370 };
-const int servoAngleMin[8] = { 90, 0, 0, 90, 0, 0, 0, 0 };
-const int servoAngleMax[8] = { 180, 90, 90, 180, 180, 180, 180, 180 };
+//const int servoPins[8] = { 12, 14, 19, 17, 15, 13, 18, 16 };
+//const int servoMins[8] = { 530, 430, 550, 640, 690, 500, 400, 380 };
+//const int servoMaxs[8] = { 2600, 2440, 2510, 2550, 2600, 2520, 2450, 2370 };
+//const int servoAngleMin[8] = { 90, 0, 0, 90, 0, 0, 0, 0 };
+//const int servoAngleMax[8] = { 180, 90, 90, 180, 180, 180, 180, 180 };
 //                                                         ft    ft    ft    ft
 //                               r1    r2    l1    l2      r4    r3    l3    l4
 //                     forward  180     0     0   180
 //                     to side   90    90    90    90
 //                     up                                 180     0     0   180
 //                     down                                 0   180   180     0
-// Stand angles as reference
-//setServoAngle(0, 135);  r1 12
-//setServoAngle(1, 45);   r2 14
-//setServoAngle(2, 45);   l1 19
-//setServoAngle(3, 135);  l2 17
-//setServoAngle(4, 0);    r3 13
-//setServoAngle(5, 180);  r4 15
-//setServoAngle(6, 0);    l3 18
-//setServoAngle(7, 180);  l4 16
 
 // Animation constants
 int frameDelay = 100;
@@ -208,30 +210,6 @@ void updateIdleBlink();
 int getFaceFpsForName(const String& faceName);
 bool pressingCheck(String cmd, int ms);
 
-void servosAngle(int angle) {
-  Serial.println("");
-  for (int i = 0; i < 8; i++) {
-    int newAngle = angle;
-    int min = servoAngleMin[i];
-    int max = servoAngleMax[i];
-    if (newAngle < min) {
-      newAngle = min;
-    }
-    if (newAngle > max) {
-      newAngle = max;
-    }
-    Serial.print("servo: ");
-    Serial.print(i);
-    Serial.print(" initial angle: ");
-    Serial.print(angle);
-    Serial.print(" angle: ");
-    Serial.print(newAngle);
-    Serial.println("");
-    servos[i].write(newAngle);
-    delay(250);
-  }
-}
-
 void servoSetup() {
 
   // PWM Init
@@ -240,23 +218,9 @@ void servoSetup() {
   //ESP32PWM::allocateTimer(2);
   //ESP32PWM::allocateTimer(3);
 
-  initServos();
+  servoConfigInit();
 
-  for (int i = 0; i < 8; i++) {
-    //servos[i].setPeriodHertz(50);
-    // Map 0-180 to approx 732-2929us
-    //servos[i].attach(servoPins[i], 732, 2929); // Range to wide for some servos, damaged one
-    int pin = servoPins[i];
-    Serial.print("servo.attach servo: ");
-    Serial.print(i);
-    Serial.print(" pin: ");
-    Serial.print(pin);
-    int res = servos[i].attach(pin, servoMins[i], servoMaxs[i]);
-    Serial.print(" res: ");
-    Serial.println(res);
-  }
   delay(10);
-  servosAngle(90);
 }
 
 void servoLoop() {
@@ -380,14 +344,16 @@ void servoLoop() {
 }
 
 // ====== HELPERS ======
-void setServoAngle(uint8_t channel, int angle) {
-  if (channel < 8) {
-    Serial.print("setServoAngle for servo: ");
-    Serial.print(channel);
-    Serial.print(" angle: ");
-    Serial.println(angle);
-    servos[channel].write(angle);
-    delayWithFace(motorCurrentDelay);
+void setServoAngle( uint8_t channel, int angle ) {
+  if ( channel >= 0 && channel <= 7 ) {
+    Serial.print( "setServoAngle for servo: " );
+    Serial.print( channel );
+    Serial.print( " angle: " );
+    Serial.println( angle );
+    //if ( false ) {
+      servos[ channel ].write( angle );
+    //}
+    delayWithFace( motorCurrentDelay );
   }
 }
 
@@ -395,7 +361,6 @@ bool pressingCheck(String cmd, int ms) {
   unsigned long start = millis();
   while (millis() - start < ms) {
     handleWebServer( "pressingCheck" );
-    //server.handleClient();
     //dnsServer.processNextRequest();
     updateAnimatedFace();
     if (currentCommand != cmd) {
