@@ -1,5 +1,5 @@
 # quadruped-spider-robot
-My slightly different version of the Sesame Robot project.
+My slightly different version of the Sesame Robot project.  My primary reason for building this robot, is to use it as a learning and development environment.  For example, I plan to use this platform to develop some power management code, specific to some of the hardware used on this particular robot, ie the servos, oled, dc-dc converter, pi pico.
 
 I am not using the same microcontroller as the original project, nor am I using the exact circuit design.  This is fairly quick and dirty at the moment.  To make the code easier for myself to follow, I did a quick separation of the source into easier to follow pieces.  The separation is not ideal at this moment or well structured.  I just wanted to quickly workout the hardware design and get it operating.
 
