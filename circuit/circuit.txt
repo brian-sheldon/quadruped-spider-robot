@@ -5,13 +5,13 @@ lipo-2s    : 7.4 volts nominal lipo 2s 400mAh battery
              min max voltage range     6.0 - 8.4 volts
              recommended voltage range 6.6 - 8.4 volts
 
-r1         : 220k resistor, top part of voltage divider
+r1         : 20k resistor, top part of voltage divider
 Vsense     : connects to analog gpio pin of microcontroller
              to measure battery voltage
              VsenseVolts = 3.3 * digitalRead( VsensePin ) / 4048
              battery voltage = VsenseVolts * ( r1 + r2 ) / r2
              battery percent can be estimated using a voltage to percent table
-r2         : 100k resistor, bot part of voltage divider
+r2         : 10k resistor, bot part of voltage divider
 r5         : 1k resistor for led to indicate state of gpio pin used to
              keep the dc-dc converter enabled.  It will change as soon as
              the time of the long press required to turn on or off the
