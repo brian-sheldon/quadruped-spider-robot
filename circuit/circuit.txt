@@ -97,8 +97,8 @@ to use many more servos if not using this particular library.
                    GP0  1 -+--------+- Vbus
                    GP1  2 -+        +- Vsys ---------------+-- d1 1N5817 -> Vout
 gnd    <-          gnd  3 -+        +- gnd  - || c2 470mF -+
-enable <-          GP2  4 -+        +- Sys_en
-switch <-          GP3  5 -+        +- 3V3out       -> 3.3 volt bus
+                   GP2  4 -+        +- Sys_en
+                   GP3  5 -+        +- 3V3out       -> 3.3 volt bus
 sda    <- I2C SDA  GP4  6 -+        +- adc_ref
 scl    <- I2C SCL  GP5  7 -+        +- GP28 A2      -> Vsense
 gnd    <-          gnd  8 -+        +- gnd          ->    gnd
