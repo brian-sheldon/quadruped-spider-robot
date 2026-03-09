@@ -56,7 +56,8 @@ r5         : 1k resistor for led to indicate state of gpio pin used to
              keep the dc-dc converter enabled.  It will change as soon as
              the time of the long press required to turn on or off the
              microcontroller has been reached, at which point the soft
-             power switch can be released.
+             power switch can be released.  Note: other values can be used
+             for this resistor such as 220 ohm for brighter or 2k for dimmer.
 led        : the enable hold indicator led
 
 Vout       : this pin supplies 5 volts to the microcontroller.  In the case
@@ -84,7 +85,7 @@ c2         : 470 mF electrolytic capacitor connected near microcontroller Vsys
     |      |                |      |          |              |
     |      +-- Vsense       |     led         |              |
     |      |                |      |          |              |
-    |      ~ r2 100k        |      ~ r5 10k   ~ r3 100k      ~ r4 10k
+    |      ~ r2 100k        |      ~ r5 1k    ~ r3 100k      ~ r4 10k
     |      |                |      |          |              |
     +------+----- Gnd ------+------+----------+--------------+-- gnd ( connected to the ground bus )
 
