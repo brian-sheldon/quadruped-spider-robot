@@ -45,7 +45,7 @@ r4         : 10k resistor, in testing, the buck converter
              combined with the Vsense voltage divider draws
              about .05 mA in this state, so a fully charged
              battery will take almost a year to discharge.
-n/c switch : normally closed switch, press to disconnect r4
+n/c switch : normally closed momentary switch, press to disconnect r4
              which enables the buck converter and powers on
              the microcontroller.  It is then up to the microcontroller
              to hold the enable pin high so the power stays on after the
