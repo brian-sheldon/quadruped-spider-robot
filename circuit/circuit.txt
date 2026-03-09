@@ -94,7 +94,7 @@ c2         : 470 mF electrolytic capacitor connected near microcontroller Vsys
     |    |                        |      |              |
     |    t1-g-+-- led+vsense on   |      ~ r3 100k      ~ r4 10k
     |    |    |                   |      |              |
-    |    s    ~                   |      |              |
+    |    s    ~ 10k               |      |              |
     |    |    |                   |      |              |
     +----+----+----- Gnd ---------+------+--------------+------ gnd ( connected to the ground bus )
 
