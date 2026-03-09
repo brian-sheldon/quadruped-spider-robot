@@ -75,9 +75,9 @@ c2         : 470 mF electrolytic capacitor connected near microcontroller Vsys
 
     +------+- Vin 6 - 8.4v -+
     |      |                |
-    |      |            +---+---+
-    |      |            |  Vin  |
-    |      |            |       +-- >| 1N5817 diode ------------ Vout ( 5v ) to both the Vsys of microcontroller and servo 5 volt bus
+    |      |            +---+---+  +---------------------------- Vout ( 5v ) to servo 5 volt bus
+    |      |            |  Vin  |  |
+    |      |            |       +--+-- >| 1N5817 diode --------- Vout ( 5v ) to Vsys of microcontroller
  lipo-2s   |            | dc-dc |
     |      |            |       +--+----------+----------------- enable ( enabled >= 1v ) to microcontroller digital gpio out
     |      |            |  Gnd  |  |          |
