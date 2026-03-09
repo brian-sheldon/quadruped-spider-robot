@@ -123,10 +123,10 @@ gnd    <-          gnd  8 -+        +- gnd          ->    gnd
                    GP6  9 -+        +- GP27 A1
                    GP7 10 -+        +- GP26 A0
                    GP8 11 -+        +- run
-                   GP9 12 -+        +- GP22
+                   GP9 12 -+        +- GP22         -> enable
 gnd    <-          gnd 13 -+        +- gnd          ->    gnd
                   GP10 14 -+        +- GP21         -> switch
-                  GP11 15 -+        +- GP20         -> enable
+                  GP11 15 -+        +- GP20         -> led+vsense enable
 R1     <-         GP12 16 -+        +- GP19         ->     L1
 R3     <-         GP13 17 -+        +- GP18         ->     L3
 gnd    <-          gnd 18 -+        +- gnd          ->    gnd
