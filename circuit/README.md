@@ -3,3 +3,5 @@
 
 ![soft button test circuit](../img/soft.button.test.circuit.jpg)
 
+![under the microcontroller](../img/under.microcontroller.jpg)
+
