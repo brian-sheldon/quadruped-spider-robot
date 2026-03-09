@@ -1,0 +1,145 @@
+
+Power Circuit with Soft Power Switch
+
+lipo-2s    : 7.4 volts nominal lipo 2s 400mAh battery
+             min max voltage range     6.0 - 8.4 volts
+             recommended voltage range 6.6 - 8.4 volts
+
+r1         : 220k resistor, top part of voltage divider
+Vsense     : connects to analog gpio pin of microcontroller
+             to measure battery voltage
+             VsenseVolts = 3.3 * digitalRead( VsensePin ) / 4048
+             battery voltage = VsenseVolts * ( r1 + r2 ) / r2
+             battery percent can be estimated using a voltage to percent table
+r2         : 100k resistor, bot part of voltage divider
+
+r3         : 100k resistor, bot part of voltage divider that
+             includes internal components within dc-dc buck
+             converter, required to ensure voltage of enable
+             pin does not exceed the microcontroller max gpio
+             voltage
+             value is high enough that the default state of
+             the enable pin is enabled
+
+enable     : when high, the dc-dc buck converter is enabled and
+             everything powered by Vout will therefore be on.
+             It appears this pin requires a minimum of 1 volt to be
+             enabled.
+             WARNING:  It is important to note that this pin will output
+             a voltage a little under the voltage of the power source
+             going into the Vin.  This voltage is higher than the typical
+             limits of GPIO pins, which can damage the microcontroller.
+             In order to bring this pin within safe limits, r4, a 100k resistor
+             will lower this voltage as it combines with internal circuitry
+             to form a voltage divider.  During testing, I believe the internal
+             circuits consist of a diode plus a ~ 220k resistor.
+r4         : 10k resistor, in testing, the buck converter
+             enable pin appeared to go low with any
+             value of resistor <= 40k connected to ground
+             The 10k value was chosen as it is well within
+             the required value to disable the converter.
+             When combined with the normally open switch,
+             this changes the default state of converter to
+             disabled, ensuring the buck converter will draw
+             the minimum current from the battery.  This current
+             combined with the Vsense voltage divider draws
+             about .05 mA in this state, so a fully charged
+             battery will take almost a year to discharge.
+n/o switch : normally open switch, press to disconnect r4
+             which enables the buck converter and powers on
+             the microcontroller.  It is then up to the microcontroller
+             to hold the enable pin high so the power stays on after the
+             this switch is released.  The switch is also monitored by
+             the microcontroller, so that the microcontroller can also
+             shutdown the system by releasing the hold on the enable pin.
+r5         : 1k resistor for led to indicate state of gpio pin used to
+             keep the dc-dc converter enabled.  It will change as soon as
+             the time of the long press required to turn on or off the
+             microcontroller has been reached, at which point the soft
+             power switch can be released.
+led        : the enable hold indicator led
+
+Vout       : this pin supplies 5 volts to the microcontroller.  In the case
+             of the Pi Pico, the Vsys pin can be connected to Vout using a
+             Schottky diode such as the 1N5817.  This allows the usb to be
+             connected at the same time as Vout is on, without voltage from
+             either source feeding into the other power source.  This added
+             diode stops usb power flowing to both the dc-dc converter and
+             the servos.  The pi pico has an internal diode to prevent voltage
+             going into Vsys from feeding to the usb port.
+1N5817     : Schottky diode, note the polarity
+
+c1         : 470 mF electrolytic capacitor connected at end of servo power bus
+c2         : 470 mF electrolytic capacitor connected near microcontroller Vsys
+
+    +------+- Vin 6 - 8.4v -+
+    |      |                |
+    |      |            +---+---+
+    |      |            |  Vin  |
+    |      |            |       +-- >| 1N5817 diode ------------ Vout ( 5v ) to both the Vsys of microcontroller and servo 5 volt bus
+ lipo-2s   |            | dc-dc |
+    |      |            |       +--+----------+----------------- enable ( enabled >= 1v ) to microcontroller digital gpio out
+    |      |            |  Gnd  |  |          |
+    |      ~ r1 220k    +---+---+  |          +- n/o switch -+-- switch to microcontroller digital gpio in
+    |      |                |      |          |              |
+    |      +-- Vsense       |     led         |              |
+    |      |                |      |          |              |
+    |      ~ r2 100k        |      ~ r5 10k   ~ r3 100k      ~ r4 10k
+    |      |                |      |          |              |
+    +------+----- Gnd ------+------+----------+--------------+-- gnd ( connected to the ground bus )
+
+Raspberry Pi Pico 2W
+
+Note: The Raspberry Pi Pico W may not work in this configuration as it can only
+support 7 servos using the servo.h library I am using.  There are apparently ways
+to use many more servos if not using this particular library.
+
+                   GP0  1 -+--------+- Vbus
+                   GP1  2 -+        +- Vsys ---------------+-- d1 1N5817 -> Vout
+gnd    <-          gnd  3 -+        +- gnd  - || c2 470mF -+
+enable <-          GP2  4 -+        +- Sys_en
+switch <-          GP3  5 -+        +- 3V3out       -> 3.3 volt bus
+sda    <- I2C SDA  GP4  6 -+        +- adc_ref
+scl    <- I2C SCL  GP5  7 -+        +- GP28 A2      -> Vsense
+gnd    <-          gnd  8 -+        +- gnd          ->    gnd
+                   GP6  9 -+        +- GP27 A1
+                   GP7 10 -+        +- GP26 A0
+                   GP8 11 -+        +- run
+                   GP9 12 -+        +- GP22
+gnd    <-          gnd 13 -+        +- gnd          ->    gnd
+                  GP10 14 -+        +- GP21         -> switch
+                  GP11 15 -+        +- GP20         -> enable
+R1     <-         GP12 16 -+        +- GP19         ->     L1
+R3     <-         GP13 17 -+        +- GP18         ->     L3
+gnd    <-          gnd 18 -+        +- gnd          ->    gnd
+R2     <-         GP14 19 -+        +- GP17         ->     L2
+R4     <-         GP15 20 -+--------+- GP16         ->     L4
+
+Servo Headers
+
+      +------------ gnd
+      |    +------- Vout
+      |    |
+ R4   +    +    +-- GP15
+ R2   +    +    +-- GP14
+ R3   +    +    +-- GP13
+ R1   +    +    +-- GP12
+ L1   +    +    +-- GP19
+ L3   +    +    +-- GP18
+ L2   +    +    +-- GP17
+ L4   +    +    +-- GP16
+      |    |
+      +-||-+ 
+      c1 470 mF
+
+
+O-LED Display
+
+ all connected to appropriate pins on microcontroller via a 4 pin cable
+
+ + 3.3 Volt bus
+ + gnd
+ + scl
+ + sda
+
+
