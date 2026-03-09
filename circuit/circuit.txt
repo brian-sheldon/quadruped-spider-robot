@@ -89,6 +89,13 @@ c2         : 470 mF electrolytic capacitor connected near microcontroller Vsys
     |      |                |      |          |              |
     +------+----- Gnd ------+------+----------+--------------+-- gnd ( connected to the ground bus )
 
+NOTE:  The led and r5 were a recent addition to the circuit and I thought for sure this would
+break the functionality of the soft power switch by connecting them to the enable pin.  I was
+totally surprised that it still worked.  I however will probably connect them to another unused
+gpio as I have plenty unused.  This will allow control of this led for other purposes, such as indicating
+status of the wifi connection by flashing for instance.  Plus it will make me more comfortable with
+the design of the soft power switch circuit.
+
 Raspberry Pi Pico 2W
 
 Note: The Raspberry Pi Pico W may not work in this configuration as it can only
