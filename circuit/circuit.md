@@ -1,0 +1,5 @@
+
+![dc-dc buck converter](../img/dc-dc.buck.jpg)
+
+![soft button test circuit](../img/soft.button.test.circuit.jpg)
+
