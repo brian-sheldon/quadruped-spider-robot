@@ -12,6 +12,19 @@ Vsense     : connects to analog gpio pin of microcontroller
              battery voltage = VsenseVolts * ( r1 + r2 ) / r2
              battery percent can be estimated using a voltage to percent table
 r2         : 100k resistor, bot part of voltage divider
+r5         : 1k resistor for led to indicate state of gpio pin used to
+             keep the dc-dc converter enabled.  It will change as soon as
+             the time of the long press required to turn on or off the
+             microcontroller has been reached, at which point the soft
+             power switch can be released.  Note: other values can be used
+             for this resistor such as 220 ohm for brighter or 2k for dimmer.
+led        : the enable hold indicator led
+t1         : 2N7000 n-channel mosfet, used to turn on led and enable the
+             voltage divider circuit used to check battery voltage.  This allows
+             the use of smaller transistors in the voltage divider without the
+             penalty of drawing power from the battery when the system is not in use.
+             I used this transistor as it was the most suitable one I have.
+r6         : 10k resistor, ensures that the gate is off when the led/vsense enable signal is off
 
 r3         : 100k resistor, bot part of voltage divider that
              includes internal components within dc-dc buck
@@ -52,13 +65,6 @@ n/c switch : normally closed momentary switch, press to disconnect r4
              this switch is released.  The switch is also monitored by
              the microcontroller, so that the microcontroller can also
              shutdown the system by releasing the hold on the enable pin.
-r5         : 1k resistor for led to indicate state of gpio pin used to
-             keep the dc-dc converter enabled.  It will change as soon as
-             the time of the long press required to turn on or off the
-             microcontroller has been reached, at which point the soft
-             power switch can be released.  Note: other values can be used
-             for this resistor such as 220 ohm for brighter or 2k for dimmer.
-led        : the enable hold indicator led
 
 Vout       : this pin supplies 5 volts to the microcontroller.  In the case
              of the Pi Pico, the Vsys pin can be connected to Vout using a
@@ -73,33 +79,32 @@ Vout       : this pin supplies 5 volts to the microcontroller.  In the case
 c1         : 470 mF electrolytic capacitor connected at end of servo power bus
 c2         : 470 mF electrolytic capacitor connected near microcontroller Vsys
 
-    +------+- Vin 6 - 8.4v -+
-    |      |                |
-    |      |            +---+---+  +---------------------------- Vout ( 5v ) to servo 5 volt bus
-    |      |            |  Vin  |  |
-    |      |            |       +--+-- >| 1N5817 diode --------- Vout ( 5v ) to Vsys of microcontroller
- lipo-2s   |            | dc-dc |
-    |      |            |       +--+----------+----------------- enable ( enabled >= 1v ) to microcontroller digital gpio out
-    |      |            |  Gnd  |  |          |
-    |      ~ r1 220k    +---+---+  |          +- n/c switch -+-- switch to microcontroller digital gpio in
-    |      |                |      |          |              |
-    |      +-- Vsense       |     led         |              |
-    |      |                |      |          |              |
-    |      ~ r2 100k        |      ~ r5 1k    ~ r3 100k      ~ r4 10k
-    |      |                |      |          |              |
-    +------+----- Gnd ------+------+----------+--------------+-- gnd ( connected to the ground bus )
+    +----+-------+- Vin 6 - 8.4v -+
+    |    |       |                |
+    |   led      ~ r1 20k     +---+---+  +--------------------- Vout ( 5v ) to servo 5 volt bus
+    |    |       |            |  Vin  |  |
+    |    |       +-- Vsense   |       +--+-- >| 1N5817 diode -- Vout ( 5v ) to Vsys of microcontroller
+ lipo-2s |       |            | dc-dc |
+    |    |       ~ r2 10k     |       +--+--------------------- enable ( enabled >= 1v ) to microcontroller digital gpio out
+    |    ~ r5 1k |            |  Gnd  |  |
+    |    |       |            +---+---+  +- n/c switch -+------ switch to microcontroller digital gpio in
+    |    +---+---+                |      |              |
+    |    |                        |      |              |
+    |    d                        |      |              |
+    |    |                        |      |              |
+    |    t1-g-+-- led+vsense on   |      ~ r3 100k      ~ r4 10k
+    |    |    |                   |      |              |
+    |    s    ~                   |      |              |
+    |    |    |                   |      |              |
+    +----+----+----- Gnd ---------+------+--------------+------ gnd ( connected to the ground bus )
 
 NOTE 1: I haven't actually tested the voltage divider circuit with the high value resistors in this test circuit
 as my test pico has non-functioning analog inputs.  So the only tested divider circuit for battery voltage sensing
 is the one currently in use in my currently functioning robot, which uses 20k and 10k resistors.  There definitely
 could be issues with using such high valued resistors, so I will have to definitely test this in the near future.
 
-NOTE 2: The led and r5 were a recent addition to the circuit and I thought for sure this would
-break the functionality of the soft power switch by connecting them to the enable pin.  I was
-totally surprised that it still worked.  I however will probably connect them to another unused
-gpio as I have plenty unused.  This will allow control of this led for other purposes, such as indicating
-status of the wifi connection by flashing for instance.  Plus it will make me more comfortable with
-the design of the soft power switch circuit.
+NOTE 2: Circuit updated to include a mosfet transistor to enable the led and vsense circuitry.  Reduces drain on battery
+when system is disabled.
 
 Raspberry Pi Pico 2W
 
