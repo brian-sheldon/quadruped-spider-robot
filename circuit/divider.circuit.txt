@@ -1,0 +1,65 @@
+
+
+This circuit replaces part of the circuit in circuit.txt, which has yet to be updated.
+
+
+  +----------------------+-- Vin ( 6.0 - 8.4 volts )
+  |            |         |
+  |            ~ r8 10k  |
+  |            |         |
+  |        +---+         |
+  |        |   |         |
+lipo 2s    |   ~ r9 10k  E
+  |        |   |         |
+  |        |   +--~---B--|) t2 2N3906
+  |        |             |
+  |        E             C
+  |        |             |
+  |  +--B--|) t1 2N3904  +-----------+
+  |  |     |             |           |
+  |  |     C---------+   ~ r1 20k   led
+  |  |               |   |           |
+  |  ~ r6 10k        |   +-- Vsense  |
+  |  |               |   |           |
+  |  +-- led/Vsense  |   ~ r2 10k    ~ r5 1k
+  |  |               |   |           |
+  |  ~ r7 10k        |   |           |
+  |  |               |   |           |
+  +------------------+---+-----------+
+
+led/Vsense : microcontroller puts this signal high to turn on led
+             and enable the voltage sense divider
+Vsense     : microcontroller monitors this line to determine voltage
+             on Pi Pico, reading the adc returns a value from 0 to 65535
+             where 0 is 0 volts and 65535 is 3.3 volts.  In the test circuit,
+             the formula to calculate voltage is ( v / 65536 ) * 3.3 * ( ( 20k + 10k ) / 10k ) * 1.012.
+             The 1.012 is an additional factor to adjust for the resistors not being precisely their
+             stated value, plus other issues such as the small voltage drop through the transistor.
+Vin        : attaches to the positive input of the dc-dc buck converter.
+
+t1         : 2N3904 transistor, base connects to control pin to enable led and voltage divider, through a 10k resistor, r6.
+             Uses another 10k resistor, r7, as a pull down resistor.
+t2         : 2N3906 transistor, turns on the battery positive voltage enabling the Vsense circuitry and the led.  Is turned
+             on by t1 via a 10k resistor, r9.  Uses another 10K resistor, r8, as a pullup resistor.
+r6 - r9    : detailed in t1, t2 description
+r1, r2     : resistors acting as a voltage divider, in this case, divide by 3.
+led, r5    : led indicator used for various purposes such as changing state when the soft power button has been pressed long
+             enough to either turn system on or off.
+
+
+2n3906
+- load of resistor divider 8.4 volts / ( 10k + 20k ) = .28 mA
+- load of red led ( 2.0 volt drop ) ( 8.4 - 2.0 volts ) / 1k = 6.4 mA
+- total load = ~ 7 mA 
+- base resistor (base voltage drop 0.7 volts, 20x for satuation ) ( 8.4 - 0.7 volts ) / ( 7 mA / 20 ) = 22k max
+
+
+2n3904
+- load is almost negligible
+- just use ~ 10k
+
+
+
+
+
+
