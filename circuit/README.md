@@ -10,7 +10,7 @@ Closeup image of the dc-dc buck converter.
 
 The most current version of the breadboard test circuit.
 
-![soft button test circuit](../img/soft.button.test.2.circuit.jpg)
+![soft button test circuit](../img/soft.button.test.3.circuit.jpg)
 
 Image of what is under the microcontroller on the current robot prototype circuit.
 
